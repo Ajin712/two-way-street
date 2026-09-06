@@ -47,8 +47,8 @@ const WATERDROP_FONT = "data:font/opentype;base64,T1RUTwANAIAAAwBQQ0ZGINjUWDcAAE
 // ---------- Supabase storage helpers ----------
 
 const supabase = createClient(
-  "https://jtrsrwwicjmlpbffpgxx.supabase.co",
-  "sb_publishable_k4mjd_0r_lO2O9hXMIoPtw_LJT_0UHL"
+  import.meta.env.VITE_SUPABASE_URL || "https://jtrsrwwicjmlpbffpgxx.supabase.co",
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "sb_publishable_k4mjd_0r_lO2O9hXMIoPtw_LJT_0UHL"
 );
 
 function throwIfError(error) {
@@ -164,6 +164,9 @@ function cropToSquareDataURL(file, { zoom = 1, offsetX = 0, offsetY = 0, size = 
 function loadImage(src) {
   return new Promise((resolve, reject) => {
     const im = new Image();
+    // Supabase Storage images are cross-origin. Set this before `src` so
+    // images can safely be drawn into the archive canvas and exported.
+    im.crossOrigin = "anonymous";
     im.onload = () => resolve(im);
     im.onerror = reject;
     im.src = src;
@@ -209,22 +212,28 @@ async function rollOverWeekIfNeeded(state, archive) {
 
   // Do not add empty weeks. A partially completed week is saved as a snapshot,
   // while its themes and photos remain in progress for the new week.
-  if (filled > 0) {
-    const snapshotId = `${week.id}-${week.startDate}`;
-    if (!archive.some((item) => item.weekId === snapshotId)) {
-      const gridDataUrl = await composeGrid(week.themes);
-      const gridImage = await uploadImage(gridDataUrl, `grids/${snapshotId}.jpg`);
-      nextArchive = [
-        ...archive,
-        {
-          weekId: snapshotId,
-          startDate: week.startDate,
-          gridImage,
-          themeTexts: week.themes.map((theme) => theme.text),
-        },
-      ];
+    if (filled > 0) {
+      const snapshotId = `${week.id}-${week.startDate}`;
+      if (!archive.some((item) => item.weekId === snapshotId)) {
+        try {
+          const gridDataUrl = await composeGrid(week.themes);
+          const gridImage = await uploadImage(gridDataUrl, `grids/${snapshotId}.jpg`);
+          nextArchive = [
+            ...archive,
+            {
+              weekId: snapshotId,
+              startDate: week.startDate,
+              gridImage,
+              themeTexts: week.themes.map((theme) => theme.text),
+            },
+          ];
+        } catch (error) {
+          // A stale/broken cross-origin image must not block the entire app
+          // from loading. The archive snapshot can be retried next boundary.
+          console.error("[photo-journal] 아카이브 그리드 생성 실패", error);
+        }
+      }
     }
-  }
 
   return {
     state: { ...state, currentWeek: { ...week, startDate: thisSunday } },
