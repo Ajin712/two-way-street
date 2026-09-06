@@ -1349,9 +1349,10 @@ function LastWeekRecord({ week, excludeTexts = [], roleNames }) {
   // the available cards instead of falling back to the single grid preview.
   // A carried-over incomplete theme is still present in the current week;
   // never duplicate it in the previous-week strip.
-  const visibleThemeTexts = (Array.isArray(week.themeTexts) ? week.themeTexts : [])
-    .filter((text) => !excludeTexts.includes(text));
-  const hasThemeTexts = visibleThemeTexts.length > 0;
+  const visibleThemeEntries = (Array.isArray(week.themeTexts) ? week.themeTexts : [])
+    .map((text, index) => ({ text, index }))
+    .filter(({ text }) => !excludeTexts.includes(text));
+  const hasThemeTexts = visibleThemeEntries.length > 0;
 
   if (!hasThemeTexts) return null;
 
@@ -1372,13 +1373,13 @@ function LastWeekRecord({ week, excludeTexts = [], roleNames }) {
           onMouseUp={endDrag}
           onMouseLeave={endDrag}
         >
-          {visibleThemeTexts.map((text, i) => (
+          {visibleThemeEntries.map(({ text, index }) => (
             <LastWeekThemeCard
-              key={i}
+              key={index}
               text={text}
               gridImage={week.gridImage}
-              cellIndex={i * 2}
-              onOpen={() => openViewer({ text, gridImage: week.gridImage, cellIndex: i * 2 })}
+              cellIndex={index * 2}
+              onOpen={() => openViewer({ text, gridImage: week.gridImage, cellIndex: index * 2 })}
             />
           ))}
         </div>
