@@ -1248,8 +1248,75 @@ function LastWeekThemeCard({ text, gridImage, cellIndex, onOpen }) {
   );
 }
 
-function LastWeekRecord({ week, excludeTexts = [] }) {
-  const [viewing, setViewing] = useState(false);
+async function cropGridCell(gridImage, cellIndex) {
+  const img = await loadImage(gridImage);
+  const canvas = document.createElement("canvas");
+  canvas.width = GRID_CELL;
+  canvas.height = GRID_CELL;
+  const ctx = canvas.getContext("2d");
+  const col = cellIndex % 6;
+  const row = Math.floor(cellIndex / 6);
+  ctx.drawImage(img, col * GRID_CELL, row * GRID_CELL, GRID_CELL, GRID_CELL, 0, 0, GRID_CELL, GRID_CELL);
+  return canvas.toDataURL("image/jpeg", 0.92);
+}
+
+function ArchivedThemeViewModal({ theme, roleNames, onClose }) {
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  return (
+    <>
+      <ModalPortal>
+        <div className="jr-overlay" onClick={onClose}>
+          <div className="jr-card max-w-sm w-full p-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3 gap-2">
+              <h3 className="jr-display text-lg truncate">{theme.text}</h3>
+              <button onClick={onClose} className="jr-muted p-1 shrink-0"><X size={18} /></button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {[0, 1].map((offset) => {
+                const role = offset === 0 ? "user1" : "user2";
+                return (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => setSelectedPhoto({
+                      gridImage: theme.gridImage,
+                      cellIndex: theme.cellIndex + offset,
+                      label: `${theme.text} · ${roleNames?.[role] || ROLE_META[role].tag}`,
+                    })}
+                    className="jr-card overflow-hidden bg-[#1A1A1A] relative aspect-square"
+                  >
+                    <GridCropTile gridImage={theme.gridImage} cellIndex={theme.cellIndex + offset} size={160} />
+                    <span
+                      className="jr-mono text-[10px] absolute top-1.5 left-1.5 w-5 h-5 rounded-full flex items-center justify-center text-white"
+                      style={{ background: ROLE_META[role].color }}
+                    >
+                      {ROLE_META[role].tag}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </ModalPortal>
+      {selectedPhoto && <ArchivedCellPhotoModal {...selectedPhoto} onClose={() => setSelectedPhoto(null)} />}
+    </>
+  );
+}
+
+function ArchivedCellPhotoModal({ gridImage, cellIndex, label, onClose }) {
+  const [src, setSrc] = useState("");
+  useEffect(() => {
+    let active = true;
+    cropGridCell(gridImage, cellIndex).then((value) => active && setSrc(value)).catch(() => {});
+    return () => { active = false; };
+  }, [gridImage, cellIndex]);
+  if (!src) return null;
+  return <PhotoDetailModal src={src} label={label} onClose={onClose} />;
+}
+
+function LastWeekRecord({ week, excludeTexts = [], roleNames }) {
+  const [viewingTheme, setViewingTheme] = useState(null);
   const stripRef = useRef(null);
   const drag = useRef({ isDown: false, startX: 0, scrollLeft: 0, moved: false });
 
@@ -1273,9 +1340,9 @@ function LastWeekRecord({ week, excludeTexts = [] }) {
     drag.current.isDown = false;
     if (stripRef.current) stripRef.current.style.cursor = "grab";
   };
-  const openViewer = () => {
+  const openViewer = (theme) => {
     if (drag.current.moved) return;
-    setViewing(true);
+    setViewingTheme(theme);
   };
 
   // Archived weeks may contain a partial set of theme labels. Still render
@@ -1311,7 +1378,7 @@ function LastWeekRecord({ week, excludeTexts = [] }) {
               text={text}
               gridImage={week.gridImage}
               cellIndex={i * 2}
-              onOpen={openViewer}
+              onOpen={() => openViewer({ text, gridImage: week.gridImage, cellIndex: i * 2 })}
             />
           ))}
         </div>
@@ -1331,7 +1398,7 @@ function LastWeekRecord({ week, excludeTexts = [] }) {
           </button>
         </div>
       )}
-      {viewing && <WeekImageModal week={week} onClose={() => setViewing(false)} />}
+      {viewingTheme && <ArchivedThemeViewModal theme={viewingTheme} roleNames={roleNames} onClose={() => setViewingTheme(null)} />}
     </div>
   );
 }
@@ -1746,6 +1813,7 @@ export default function PhotoJournalApp() {
             <LastWeekRecord
               week={archive.length > 0 ? archive[archive.length - 1] : null}
               excludeTexts={themes.map((theme) => theme.text)}
+              roleNames={roleNames}
             />
           </>
         ) : (
