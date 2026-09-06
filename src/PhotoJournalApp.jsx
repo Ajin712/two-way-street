@@ -1237,7 +1237,7 @@ function LastWeekThemeCard({ text, gridImage, cellIndex, onOpen }) {
   );
 }
 
-function LastWeekRecord({ week }) {
+function LastWeekRecord({ week, excludeTexts = [] }) {
   const [viewing, setViewing] = useState(false);
   const stripRef = useRef(null);
   const drag = useRef({ isDown: false, startX: 0, scrollLeft: 0, moved: false });
@@ -1269,7 +1269,13 @@ function LastWeekRecord({ week }) {
 
   // Archived weeks may contain a partial set of theme labels. Still render
   // the available cards instead of falling back to the single grid preview.
-  const hasThemeTexts = Array.isArray(week.themeTexts) && week.themeTexts.length > 0;
+  // A carried-over incomplete theme is still present in the current week;
+  // never duplicate it in the previous-week strip.
+  const visibleThemeTexts = (Array.isArray(week.themeTexts) ? week.themeTexts : [])
+    .filter((text) => !excludeTexts.includes(text));
+  const hasThemeTexts = visibleThemeTexts.length > 0;
+
+  if (!hasThemeTexts) return null;
 
   return (
     <div className="mt-6">
@@ -1288,7 +1294,7 @@ function LastWeekRecord({ week }) {
           onMouseUp={endDrag}
           onMouseLeave={endDrag}
         >
-          {week.themeTexts.map((text, i) => (
+          {visibleThemeTexts.map((text, i) => (
             <LastWeekThemeCard
               key={i}
               text={text}
@@ -1693,7 +1699,10 @@ export default function PhotoJournalApp() {
               <Plus size={14} /> 주제 추가하기
             </button>
 
-            <LastWeekRecord week={archive.length > 0 ? archive[archive.length - 1] : null} />
+            <LastWeekRecord
+              week={archive.length > 0 ? archive[archive.length - 1] : null}
+              excludeTexts={themes.map((theme) => theme.text)}
+            />
           </>
         ) : (
           <ArchiveView archive={archive} />
