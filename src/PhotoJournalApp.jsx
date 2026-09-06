@@ -1472,23 +1472,21 @@ export default function PhotoJournalApp() {
       record?.themeTexts?.length === WEEK_THEME_COUNT ? index : lastIndex,
     -1
   );
+  const currentThemeTexts = new Set(themes.map((theme) => theme.text));
   const carriedThemeTexts = new Set(
     themes.length < WEEK_THEME_COUNT
       ? archive
           .slice(lastCompleteArchiveIndex + 1)
           .flatMap((record) =>
             Array.isArray(record?.themeTexts) && record.themeTexts.length < WEEK_THEME_COUNT
-              ? record.themeTexts
+              ? record.themeTexts.filter((text) => !currentThemeTexts.has(text))
               : []
           )
       : []
   );
   const currentFilledCount = themes.reduce(
     (acc, t) =>
-      acc +
-      (carriedThemeTexts.has(t.text)
-        ? 0
-        : (t.photos.user1 ? 1 : 0) + (t.photos.user2 ? 1 : 0)),
+      acc + (t.photos.user1 ? 1 : 0) + (t.photos.user2 ? 1 : 0),
     0
   );
   const carriedPhotoCount = carriedThemeTexts.size * 2;
