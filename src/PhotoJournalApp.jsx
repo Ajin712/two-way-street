@@ -1468,8 +1468,8 @@ export default function PhotoJournalApp() {
     (acc, t) => acc + (t.photos.user1 ? 1 : 0) + (t.photos.user2 ? 1 : 0),
     0
   );
-  const gridPhotoTotal = themes.length * 2;
-  const progressRatio = gridPhotoTotal > 0 ? filledCount / gridPhotoTotal : 0;
+  const gridPhotoTotal = 36;
+  const progressRatio = filledCount / gridPhotoTotal;
 
   const handleUpload = useCallback(
     async (dataUrl, comment = "") => {
