@@ -87,7 +87,7 @@ async function loadArchive() {
       gridImage: w.grid_image_url,
       themeTexts: legacy ? w.theme_texts : w.theme_texts?.themeTexts || [],
     };
-  });
+  }).filter((w) => w.themeTexts.length === WEEK_THEME_COUNT);
 }
 async function saveArchive(list) {
   if (!list.length) return;
@@ -210,9 +210,9 @@ async function rollOverWeekIfNeeded(state, archive) {
   );
   let nextArchive = archive;
 
-  // Do not add empty weeks. A partially completed week is saved as a snapshot,
-  // while its themes and photos remain in progress for the new week.
-    if (filled > 0) {
+  // Only a fully completed week belongs in the archive. An incomplete week
+  // continues into the next week without creating a partial archive entry.
+    if (filled === WEEK_THEME_COUNT * 2) {
       const snapshotId = `${week.id}-${week.startDate}`;
       if (!archive.some((item) => item.weekId === snapshotId)) {
         try {
@@ -1259,7 +1259,9 @@ function LastWeekRecord({ week }) {
     setViewing(true);
   };
 
-  const hasThemeTexts = Array.isArray(week.themeTexts) && week.themeTexts.length === WEEK_THEME_COUNT;
+  // Archived weeks may contain a partial set of theme labels. Still render
+  // the available cards instead of falling back to the single grid preview.
+  const hasThemeTexts = Array.isArray(week.themeTexts) && week.themeTexts.length > 0;
 
   return (
     <div className="mt-6">
