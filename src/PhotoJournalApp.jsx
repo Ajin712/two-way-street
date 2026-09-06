@@ -241,7 +241,17 @@ async function rollOverWeekIfNeeded(state, archive) {
     state: {
       ...state,
       currentWeek: incompleteThemes.length > 0
-        ? { ...week, startDate: thisSunday, themes: incompleteThemes }
+        ? {
+            ...week,
+            startDate: thisSunday,
+            gridThemeTexts: Array.from(
+              new Set([
+                ...(Array.isArray(week.gridThemeTexts) ? week.gridThemeTexts : []),
+                ...completedThemes.map((theme) => theme.text),
+              ])
+            ),
+            themes: incompleteThemes,
+          }
         : createNewWeek(state.themePool),
     },
     archive: nextArchive,
@@ -265,6 +275,7 @@ function createNewWeek(pool) {
   return {
     id,
     startDate,
+    gridThemeTexts: [],
     themes: first
       ? [{ themeId: first.id, text: first.text, photos: { user1: null, user2: null } }]
       : [],
@@ -1465,15 +1476,15 @@ export default function PhotoJournalApp() {
   const activeIdx = themes.length - 1;
   const activeTheme = activeIdx >= 0 ? themes[activeIdx] : null;
   // Progress belongs to the currently filling 6x6 result, not to a calendar
-  // week. Accumulate completed cards across partial archive snapshots until a
-  // full 18-theme archive starts a new result.
+  // week. Prefer the explicit grid membership saved in current_week. The
+  // archive-based fallback keeps existing records working during migration.
   const lastCompleteArchiveIndex = archive.reduce(
     (lastIndex, record, index) =>
       record?.themeTexts?.length === WEEK_THEME_COUNT ? index : lastIndex,
     -1
   );
   const currentThemeTexts = new Set(themes.map((theme) => theme.text));
-  const carriedThemeTexts = new Set(
+  const fallbackGridThemeTexts = new Set(
     themes.length < WEEK_THEME_COUNT
       ? archive
           .slice(lastCompleteArchiveIndex + 1)
@@ -1484,9 +1495,17 @@ export default function PhotoJournalApp() {
           )
       : []
   );
+  const carriedThemeTexts = new Set(
+    Array.isArray(currentWeek?.gridThemeTexts)
+      ? currentWeek.gridThemeTexts
+      : fallbackGridThemeTexts
+  );
   const currentFilledCount = themes.reduce(
     (acc, t) =>
-      acc + (t.photos.user1 ? 1 : 0) + (t.photos.user2 ? 1 : 0),
+      acc +
+      (carriedThemeTexts.has(t.text)
+        ? 0
+        : (t.photos.user1 ? 1 : 0) + (t.photos.user2 ? 1 : 0)),
     0
   );
   const carriedPhotoCount = carriedThemeTexts.size * 2;
