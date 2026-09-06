@@ -1464,10 +1464,20 @@ export default function PhotoJournalApp() {
   const themes = currentWeek?.themes || [];
   const activeIdx = themes.length - 1;
   const activeTheme = activeIdx >= 0 ? themes[activeIdx] : null;
-  const filledCount = themes.reduce(
+  const currentFilledCount = themes.reduce(
     (acc, t) => acc + (t.photos.user1 ? 1 : 0) + (t.photos.user2 ? 1 : 0),
     0
   );
+  // Completed cards moved to the previous-week strip are still part of the
+  // in-progress 6x6 result until the remaining cards finish.
+  const latestRecord = archive.length > 0 ? archive[archive.length - 1] : null;
+  const carriedPhotoCount =
+    themes.length < WEEK_THEME_COUNT &&
+    latestRecord?.themeTexts?.length > 0 &&
+    latestRecord.themeTexts.length < WEEK_THEME_COUNT
+      ? latestRecord.themeTexts.length * 2
+      : 0;
+  const filledCount = carriedPhotoCount + currentFilledCount;
   const gridPhotoTotal = 36;
   const progressRatio = filledCount / gridPhotoTotal;
 
