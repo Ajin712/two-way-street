@@ -961,7 +961,6 @@ function WeekStrip({ themes, identity, uploading, onPick, roleNames, onUpdateCom
   return (
     <div className="mb-6">
       <div className="text-center mb-4">
-        <h2 className="jr-display jr-hand text-2xl mt-1">기록</h2>
         <p className="jr-eyebrow" style={{ fontFamily: "'MaruBuri','Gowun Batang',serif" }}>이번 주</p>
       </div>
       <div
@@ -1756,6 +1755,10 @@ export default function PhotoJournalApp() {
         {/* tab switch */}
         <div className="flex justify-center mb-6">
           <TabSwitch tab={tab} setTab={setTab} />
+        </div>
+
+        <div className="text-center mb-3">
+          <h2 className="jr-display jr-hand text-2xl mt-1">기록</h2>
         </div>
 
         {/* progress bar */}
