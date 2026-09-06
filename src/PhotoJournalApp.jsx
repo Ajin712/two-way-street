@@ -87,7 +87,7 @@ async function loadArchive() {
       gridImage: w.grid_image_url,
       themeTexts: legacy ? w.theme_texts : w.theme_texts?.themeTexts || [],
     };
-  }).filter((w) => w.themeTexts.length === WEEK_THEME_COUNT);
+  });
 }
 async function saveArchive(list) {
   if (!list.length) return;
@@ -210,9 +210,9 @@ async function rollOverWeekIfNeeded(state, archive) {
   );
   let nextArchive = archive;
 
-  // Only a fully completed week belongs in the archive. An incomplete week
-  // continues into the next week without creating a partial archive entry.
-    if (filled === WEEK_THEME_COUNT * 2) {
+  // Every Sunday starts a fresh current week. We keep a snapshot for the
+  // "저번 주" strip, while the archive tab filters out incomplete snapshots.
+    if (filled > 0) {
       const snapshotId = `${week.id}-${week.startDate}`;
       if (!archive.some((item) => item.weekId === snapshotId)) {
         try {
@@ -236,7 +236,7 @@ async function rollOverWeekIfNeeded(state, archive) {
     }
 
   return {
-    state: { ...state, currentWeek: { ...week, startDate: thisSunday } },
+    state: { ...state, currentWeek: createNewWeek(state.themePool) },
     archive: nextArchive,
     changed: true,
   };
@@ -1099,8 +1099,9 @@ function WeekImageModal({ week, onClose }) {
 
 function ArchiveView({ archive }) {
   const [viewing, setViewing] = useState(null);
+  const completedArchive = archive.filter((w) => w.themeTexts?.length === WEEK_THEME_COUNT);
 
-  if (archive.length === 0) {
+  if (completedArchive.length === 0) {
     return (
       <div className="text-center py-16">
         <p className="jr-muted text-sm">아직 완성된 주가 없어요.</p>
@@ -1109,7 +1110,7 @@ function ArchiveView({ archive }) {
     );
   }
 
-  const ordered = [...archive].reverse(); // newest first
+  const ordered = [...completedArchive].reverse(); // newest first
   const big = ordered[0];
   const smalls = ordered.slice(1, 5);
   const rest = ordered.slice(5);
