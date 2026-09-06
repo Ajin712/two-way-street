@@ -1464,19 +1464,34 @@ export default function PhotoJournalApp() {
   const themes = currentWeek?.themes || [];
   const activeIdx = themes.length - 1;
   const activeTheme = activeIdx >= 0 ? themes[activeIdx] : null;
+  // Progress belongs to the currently filling 6x6 result, not to a calendar
+  // week. Accumulate completed cards across partial archive snapshots until a
+  // full 18-theme archive starts a new result.
+  const lastCompleteArchiveIndex = archive.reduce(
+    (lastIndex, record, index) =>
+      record?.themeTexts?.length === WEEK_THEME_COUNT ? index : lastIndex,
+    -1
+  );
+  const carriedThemeTexts = new Set(
+    themes.length < WEEK_THEME_COUNT
+      ? archive
+          .slice(lastCompleteArchiveIndex + 1)
+          .flatMap((record) =>
+            Array.isArray(record?.themeTexts) && record.themeTexts.length < WEEK_THEME_COUNT
+              ? record.themeTexts
+              : []
+          )
+      : []
+  );
   const currentFilledCount = themes.reduce(
-    (acc, t) => acc + (t.photos.user1 ? 1 : 0) + (t.photos.user2 ? 1 : 0),
+    (acc, t) =>
+      acc +
+      (carriedThemeTexts.has(t.text)
+        ? 0
+        : (t.photos.user1 ? 1 : 0) + (t.photos.user2 ? 1 : 0)),
     0
   );
-  // Completed cards moved to the previous-week strip are still part of the
-  // in-progress 6x6 result until the remaining cards finish.
-  const latestRecord = archive.length > 0 ? archive[archive.length - 1] : null;
-  const carriedPhotoCount =
-    themes.length < WEEK_THEME_COUNT &&
-    latestRecord?.themeTexts?.length > 0 &&
-    latestRecord.themeTexts.length < WEEK_THEME_COUNT
-      ? latestRecord.themeTexts.length * 2
-      : 0;
+  const carriedPhotoCount = carriedThemeTexts.size * 2;
   const filledCount = carriedPhotoCount + currentFilledCount;
   const gridPhotoTotal = 36;
   const progressRatio = filledCount / gridPhotoTotal;
