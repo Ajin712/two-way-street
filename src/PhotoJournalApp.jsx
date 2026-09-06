@@ -1373,13 +1373,13 @@ function LastWeekRecord({ week, excludeTexts = [], roleNames }) {
           onMouseUp={endDrag}
           onMouseLeave={endDrag}
         >
-          {visibleThemeEntries.map(({ text, index }) => (
+          {visibleThemeEntries.map(({ text, index }, visibleIndex) => (
             <LastWeekThemeCard
               key={index}
               text={text}
               gridImage={week.gridImage}
-              cellIndex={index * 2}
-              onOpen={() => openViewer({ text, gridImage: week.gridImage, cellIndex: index * 2 })}
+              cellIndex={visibleIndex * 2}
+              onOpen={() => openViewer({ text, gridImage: week.gridImage, cellIndex: visibleIndex * 2 })}
             />
           ))}
         </div>
