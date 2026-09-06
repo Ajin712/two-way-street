@@ -1218,8 +1218,8 @@ function GridCropTile({ gridImage, cellIndex, size = 86 }) {
       className="w-full h-full"
       style={{
         backgroundImage: `url(${gridImage})`,
-        backgroundSize: `${cols * size}px ${cols * size}px`,
-        backgroundPosition: `-${col * size}px -${row * size}px`,
+        backgroundSize: `${cols * 100}% ${cols * 100}%`,
+        backgroundPosition: `${(col / (cols - 1)) * 100}% ${(row / (cols - 1)) * 100}%`,
         backgroundRepeat: "no-repeat",
       }}
     />
