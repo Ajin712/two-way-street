@@ -204,19 +204,21 @@ async function rollOverWeekIfNeeded(state, archive) {
   const thisSunday = getKoreaWeekStart();
   if (!week || week.startDate === thisSunday) return { state, archive, changed: false };
 
-  const filled = week.themes.reduce(
-    (total, theme) => total + (theme.photos.user1 ? 1 : 0) + (theme.photos.user2 ? 1 : 0),
-    0
+  const completedThemes = week.themes.filter(
+    (theme) => theme.photos.user1 && theme.photos.user2
+  );
+  const incompleteThemes = week.themes.filter(
+    (theme) => !(theme.photos.user1 && theme.photos.user2)
   );
   let nextArchive = archive;
 
-  // Every Sunday starts a fresh current week. We keep a snapshot for the
-  // "저번 주" strip, while the archive tab filters out incomplete snapshots.
-    if (filled > 0) {
+  // Move only completed cards to the previous-week strip. Incomplete cards
+  // remain in the current week and continue to be worked on.
+    if (completedThemes.length > 0) {
       const snapshotId = `${week.id}-${week.startDate}`;
       if (!archive.some((item) => item.weekId === snapshotId)) {
         try {
-          const gridDataUrl = await composeGrid(week.themes);
+          const gridDataUrl = await composeGrid(completedThemes);
           const gridImage = await uploadImage(gridDataUrl, `grids/${snapshotId}.jpg`);
           nextArchive = [
             ...archive,
@@ -224,7 +226,7 @@ async function rollOverWeekIfNeeded(state, archive) {
               weekId: snapshotId,
               startDate: week.startDate,
               gridImage,
-              themeTexts: week.themes.map((theme) => theme.text),
+              themeTexts: completedThemes.map((theme) => theme.text),
             },
           ];
         } catch (error) {
@@ -236,7 +238,12 @@ async function rollOverWeekIfNeeded(state, archive) {
     }
 
   return {
-    state: { ...state, currentWeek: createNewWeek(state.themePool) },
+    state: {
+      ...state,
+      currentWeek: incompleteThemes.length > 0
+        ? { ...week, startDate: thisSunday, themes: incompleteThemes }
+        : createNewWeek(state.themePool),
+    },
     archive: nextArchive,
     changed: true,
   };
