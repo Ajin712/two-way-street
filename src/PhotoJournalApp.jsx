@@ -1123,7 +1123,6 @@ function ArchiveView({ archive }) {
     return (
       <div className="text-center py-16">
         <p className="jr-muted text-sm">아직 완성된 기록이 없어요.</p>
-        <p className="jr-muted text-xs mt-1">36장을 다 채우면 여기 쌓여요.</p>
       </div>
     );
   }
@@ -1798,24 +1797,21 @@ export default function PhotoJournalApp() {
             ) : (
               <div className="jr-card p-6 text-center">
                 <p className="jr-muted text-sm">등록된 주제가 없어요. 먼저 주제를 추가해 주세요.</p>
-                <button className="jr-btn-primary mt-3" onClick={() => setShowThemeModal(true)}>
-                  주제 추가하기
-                </button>
               </div>
             )}
-
-            <button
-              onClick={() => setShowThemeModal(true)}
-              className="jr-btn-ghost w-full mt-2 flex items-center justify-center gap-1.5 text-sm"
-            >
-              <Plus size={14} /> 주제 추가하기
-            </button>
 
             <LastWeekRecord
               week={archive.length > 0 ? archive[archive.length - 1] : null}
               excludeTexts={themes.map((theme) => theme.text)}
               roleNames={roleNames}
             />
+
+            <button
+              onClick={() => setShowThemeModal(true)}
+              className="jr-btn-ghost w-full mt-4 flex items-center justify-center gap-1.5 text-sm"
+            >
+              <Plus size={14} /> 주제 추가하기
+            </button>
           </>
         ) : (
           <ArchiveView archive={archive} />
