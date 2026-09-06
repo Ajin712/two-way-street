@@ -961,8 +961,8 @@ function WeekStrip({ themes, identity, uploading, onPick, roleNames, onUpdateCom
   return (
     <div className="mb-6">
       <div className="text-center mb-4">
-        <p className="jr-eyebrow" style={{ fontFamily: "'MaruBuri','Gowun Batang',serif" }}>이번 주</p>
         <h2 className="jr-display jr-hand text-2xl mt-1">기록</h2>
+        <p className="jr-eyebrow" style={{ fontFamily: "'MaruBuri','Gowun Batang',serif" }}>이번 주</p>
       </div>
       <div
         ref={stripRef}
