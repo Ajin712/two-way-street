@@ -1468,6 +1468,8 @@ export default function PhotoJournalApp() {
     (acc, t) => acc + (t.photos.user1 ? 1 : 0) + (t.photos.user2 ? 1 : 0),
     0
   );
+  const gridPhotoTotal = themes.length * 2;
+  const progressRatio = gridPhotoTotal > 0 ? filledCount / gridPhotoTotal : 0;
 
   const handleUpload = useCallback(
     async (dataUrl, comment = "") => {
@@ -1652,14 +1654,14 @@ export default function PhotoJournalApp() {
           <div className="h-1.5 rounded-full bg-[#E6E6E3] overflow-hidden">
             <div
               className="h-full bg-[#1C1C1C] transition-all duration-500"
-              style={{ width: `${(filledCount / 36) * 100}%` }}
+              style={{ width: `${progressRatio * 100}%` }}
             />
           </div>
           <p
             className="text-[11px] jr-muted mt-1"
             style={{ fontFamily: "'MaruBuri','Gowun Batang',serif" }}
           >
-            {filledCount} / 36 장
+            {filledCount} / {gridPhotoTotal} 장
           </p>
         </div>
 
