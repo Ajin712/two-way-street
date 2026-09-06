@@ -1111,7 +1111,7 @@ function ArchiveView({ archive }) {
   if (completedArchive.length === 0) {
     return (
       <div className="text-center py-16">
-        <p className="jr-muted text-sm">아직 완성된 주가 없어요.</p>
+        <p className="jr-muted text-sm">아직 완성된 기록이 없어요.</p>
         <p className="jr-muted text-xs mt-1">36장을 다 채우면 여기 쌓여요.</p>
       </div>
     );
