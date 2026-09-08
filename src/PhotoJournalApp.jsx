@@ -112,7 +112,9 @@ function dataUrlToBlob(dataUrl) {
 async function uploadImage(dataUrl, path) {
   const { error } = await supabase.storage.from("photos").upload(path, dataUrlToBlob(dataUrl), {
     contentType: "image/jpeg",
-    upsert: false,
+    // Retrying an upload should replace a partially-saved file instead of
+    // failing with a duplicate-object error.
+    upsert: true,
   });
   throwIfError(error);
   return supabase.storage.from("photos").getPublicUrl(path).data.publicUrl;
@@ -1624,7 +1626,7 @@ export default function PhotoJournalApp() {
         }
       } catch (e) {
         console.error(e);
-        setError("업로드에 실패했어요. 다시 시도해 주세요.");
+        setError(e?.message || "업로드에 실패했어요. 다시 시도해 주세요.");
       } finally {
         setUploading(false);
       }
