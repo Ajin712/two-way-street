@@ -847,6 +847,11 @@ function ThemeViewModal({ theme, roleNames, onUpdateComment, onClose }) {
                 {theme.photos[role] && (
                   <img src={theme.photos[role]} alt="" className="w-full h-full object-cover" />
                 )}
+                {!theme.photos[role] && (
+                  <span className="absolute inset-0 flex items-center justify-center text-[#B7B2A3]">
+                    <Clock size={22} strokeWidth={1.5} />
+                  </span>
+                )}
                 <span
                   className="jr-mono text-[10px] absolute top-1.5 left-1.5 w-5 h-5 rounded-full flex items-center justify-center text-white"
                   style={{ background: ROLE_META[role].color }}
