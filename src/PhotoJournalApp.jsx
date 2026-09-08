@@ -675,7 +675,7 @@ function MiniSlot({ role, dataUrl, isMine, uploading, onPick, onView }) {
           <Camera size={20} strokeWidth={1.5} />
         </button>
       ) : (
-        <div className="w-full h-full flex items-center justify-center text-[#5c584d]">
+        <div className="w-full h-full flex items-center justify-center text-[#B7B2A3]">
           <Clock size={18} strokeWidth={1.5} className="animate-pulse" />
         </div>
       )}
