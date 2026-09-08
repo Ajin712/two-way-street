@@ -243,6 +243,7 @@ async function rollOverWeekIfNeeded(state, archive) {
       currentWeek: incompleteThemes.length > 0
         ? {
             ...week,
+            id: "w" + Date.now(),
             startDate: thisSunday,
             gridThemeTexts: Array.from(
               new Set([
@@ -1586,8 +1587,9 @@ export default function PhotoJournalApp() {
       try {
         let fresh = (await loadAppState()) || appState;
         let week = { ...fresh.currentWeek };
-        const idx = week.themes.length - 1;
-        const photoUrl = await uploadImage(dataUrl, `weeks/${week.id}/${idx}-${identity}.jpg`);
+        const idx = week.themes.findIndex((theme) => theme.themeId === activeTheme.themeId);
+        if (idx < 0) throw new Error("현재 주제 카드를 찾지 못했어요.");
+        const photoUrl = await uploadImage(dataUrl, `weeks/${week.id}/${activeTheme.themeId}-${identity}.jpg`);
         const themesCopy = week.themes.map((t, i) =>
           i === idx ? {
             ...t,
