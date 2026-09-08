@@ -112,7 +112,7 @@ function dataUrlToBlob(dataUrl) {
 async function uploadImage(dataUrl, path) {
   const { error } = await supabase.storage.from("photos").upload(path, dataUrlToBlob(dataUrl), {
     contentType: "image/jpeg",
-    upsert: false,
+    upsert: true,
   });
   throwIfError(error);
   return supabase.storage.from("photos").getPublicUrl(path).data.publicUrl;
